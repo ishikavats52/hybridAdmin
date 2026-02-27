@@ -1,0 +1,483 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+    MapPin, Navigation, Clock, CreditCard, User, ShieldAlert,
+    CheckCircle, XCircle, AlertTriangle, MoreVertical, Search,
+    Filter, ChevronDown, Phone, Mail, Car, Calendar, DollarSign,
+    Eye, Download, AlertCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+
+const mockLiveRides = [
+    { id: 'R-LIVE-001', passenger: 'Alice Johnson', driver: 'Mike Ross', status: 'ongoing', pickup: 'Central Station', dropoff: 'Airport Terminal 1', eta: '15 mins', location: { lat: 40.7128, lng: -74.0060 }, progress: 45 },
+    { id: 'R-LIVE-002', passenger: 'Bob Smith', driver: 'Harvey Specter', status: 'arriving', pickup: 'Downtown', dropoff: 'City Mall', eta: '5 mins', location: { lat: 40.7300, lng: -74.0000 }, progress: 10 },
+    { id: 'R-LIVE-003', passenger: 'Charlie Brown', driver: 'Louis Litt', status: 'ongoing', pickup: 'Office Park', dropoff: 'Home', eta: '22 mins', location: { lat: 40.7500, lng: -73.9800 }, progress: 60 },
+];
+
+const mockRideHistory = [
+    { id: 'R-HIST-101', passenger: 'Diana Prince', driver: 'Donna Paulsen', status: 'completed', date: '2025-02-10', time: '14:30', amount: 25.50, pickup: 'Museum', dropoff: 'Cafe' },
+    { id: 'R-HIST-102', passenger: 'Evan Wright', driver: 'Rachel Zane', status: 'cancelled', date: '2025-02-09', time: '09:15', amount: 0.00, pickup: 'Airport', dropoff: 'Hotel', cancelReason: 'Passenger requested' },
+    { id: 'R-HIST-103', passenger: 'Frank Castle', driver: 'Jessica Pearson', status: 'completed', date: '2025-02-08', time: '18:45', amount: 18.75, pickup: 'Gym', dropoff: 'Safehouse' },
+    { id: 'R-HIST-104', passenger: 'Gwen Stacy', driver: 'Peter Parker', status: 'upcoming', date: '2025-02-12', time: '08:00', amount: 12.00, pickup: 'School', dropoff: 'Lab' },
+];
+
+const mockDisputes = [
+    { id: 'D-201', rideId: 'R-HIST-099', passenger: 'Harry Potter', driver: 'Severus Snape', issue: 'Overcharged', status: 'open', amount: 15.00, date: '2025-02-07' },
+    { id: 'D-202', rideId: 'R-HIST-098', passenger: 'Ron Weasley', driver: 'Minerva McGonagall', issue: 'Driver rude behavior', status: 'resolved', amount: 0.00, date: '2025-02-06' },
+];
+
+// --- Components ---
+
+const StatusBadge = ({ status }) => {
+    const styles = {
+        ongoing: 'bg-blue-100 text-blue-700 border-blue-200',
+        arriving: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        cancelled: 'bg-rose-100 text-rose-700 border-rose-200',
+        upcoming: 'bg-amber-100 text-amber-700 border-amber-200',
+        open: 'bg-orange-100 text-orange-700 border-orange-200',
+        resolved: 'bg-slate-100 text-slate-700 border-slate-200',
+    };
+
+    const icons = {
+        ongoing: <Navigation size={12} />,
+        arriving: <Clock size={12} />,
+        completed: <CheckCircle size={12} />,
+        cancelled: <XCircle size={12} />,
+        upcoming: <Calendar size={12} />,
+        open: <AlertTriangle size={12} />,
+        resolved: <CheckCircle size={12} />,
+    };
+
+    return (
+        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 w-fit border ${styles[status] || styles.resolved}`}>
+            {icons[status]}
+            <span className="capitalize">{status}</span>
+        </span>
+    );
+};
+
+const RideManagement = ({ view = 'live' }) => {
+    const navigate = useNavigate();
+    // State
+    const [activeTab, setActiveTab] = useState('all'); // for history
+    const [selectedRide, setSelectedRide] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [historyData, setHistoryData] = useState([]);
+    const [allRides, setAllRides] = useState([]); // Raw data from backend
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [disputesData, setDisputesData] = useState(mockDisputes);
+    const [activeDropdown, setActiveDropdown] = useState(null);
+
+    useEffect(() => {
+        if (view === 'history' || view === 'live') {
+            fetchRides();
+        }
+    }, [view, activeTab]);
+
+    const fetchRides = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('adminToken');
+            const res = await axios.get('https://hybridride.onrender.com/api/admin/rides', {
+                params: { status: activeTab !== 'all' ? activeTab : undefined },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data.success) {
+                const formattedRides = res.data.data.map(ride => ({
+                    id: ride._id,
+                    passenger: ride.passenger?.name || 'Unknown',
+                    driver: ride.driver?.name || 'Not assigned',
+                    status: ride.status,
+                    date: new Date(ride.createdAt).toLocaleDateString(),
+                    time: new Date(ride.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    amount: ride.finalFare || ride.offeredFare || 0,
+                    pickup: ride.pickup?.address || 'N/A',
+                    dropoff: ride.dropoff?.address || 'N/A',
+                    fullData: ride
+                }));
+                setHistoryData(formattedRides);
+                setAllRides(res.data.data);
+            } else {
+                setError(res.data.message);
+            }
+        } catch (err) {
+            console.error('Failed to fetch rides:', err);
+            setError(err.response?.data?.message || 'Failed to connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filter Logic
+    const filteredHistory = historyData.filter(ride => {
+        const matchesTab = activeTab === 'all' || ride.status === activeTab;
+        const matchesSearch = ride.passenger.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ride.driver.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ride.id.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesTab && matchesSearch;
+    });
+
+    // Actions
+    const handleCancelRide = (rideId) => {
+        if (window.confirm('Are you sure you want to cancel this ride?')) {
+            setHistoryData(prev => prev.map(r => r.id === rideId ? { ...r, status: 'cancelled' } : r));
+        }
+    };
+
+    const handleRefund = (disputeId) => {
+        if (window.confirm('Process refund for this dispute?')) {
+            setDisputesData(prev => prev.map(d => d.id === disputeId ? { ...d, status: 'resolved' } : d));
+        }
+    };
+
+    // --- Views ---
+
+    const renderLiveTracking = () => (
+        <div className="h-[calc(100vh-140px)] flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h2 className="font-bold text-slate-900 flex items-center gap-2 text-lg">
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse ring-4 ring-green-100" />
+                        Live Rides Monitoring ({historyData.filter(r => r.status === 'ongoing' || r.status === 'accepted' || r.status === 'arrived').length})
+                    </h2>
+                    <span className="text-sm text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+                        Real-time updates active
+                    </span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-50/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {loading ? (
+                            <div className="col-span-full py-12 text-center text-slate-500">
+                                Loading live rides...
+                            </div>
+                        ) : historyData.filter(r => r.status === 'ongoing' || r.status === 'accepted' || r.status === 'arrived').length === 0 ? (
+                            <div className="col-span-full py-12 text-center text-slate-500">
+                                No active rides at the moment.
+                            </div>
+                        ) : historyData.filter(r => r.status === 'ongoing' || r.status === 'accepted' || r.status === 'arrived').map(ride => (
+                            <div
+                                key={ride.id}
+                                onClick={() => setSelectedRide(ride)}
+                                className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md
+                                    ${selectedRide?.id === ride.id ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'border-slate-200 bg-white hover:border-blue-300'}`}
+                            >
+                                <div className="flex justify-between items-start mb-3">
+                                    <span className="text-xs font-mono font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">{ride.id.slice(-6).toUpperCase()}</span>
+                                    <StatusBadge status={ride.status} />
+                                </div>
+
+                                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
+                                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                        <Car size={20} />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold text-slate-900">{ride.passenger}</div>
+                                        <div className="text-xs text-slate-500">Driver: <span className="font-medium text-slate-700">{ride.driver}</span></div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-2 text-sm">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Pickup</p>
+                                            <p className="text-slate-700 font-medium leading-snug truncate max-w-[150px]">{ride.pickup}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-2 text-sm">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Dropoff</p>
+                                            <p className="text-slate-700 font-medium leading-snug truncate max-w-[150px]">{ride.dropoff}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+                                    <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
+                                        <Clock size={12} /> <span className="font-semibold text-slate-700">{ride.time}</span>
+                                    </div>
+                                    <button
+                                        className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/rides/${ride.id}`);
+                                        }}
+                                    >
+                                        View Details →
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderHistory = () => (
+        <div className="space-y-6">
+            {/* Filters */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between gap-4">
+                <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 no-scrollbar">
+                    {['all', 'upcoming', 'ongoing', 'completed', 'cancelled'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap
+                                ${activeTab === tab
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                        >
+                            <span className="capitalize">{tab}</span>
+                        </button>
+                    ))}
+                </div>
+                <div className="relative w-full md:w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search rides..."
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                {error && (
+                    <div className="p-4 m-4 bg-red-50 text-red-600 border border-red-200 rounded-lg flex items-center gap-2">
+                        <AlertCircle size={18} />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Ride Info</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Participants</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Route</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Status & Amount</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                                        Loading rides...
+                                    </td>
+                                </tr>
+                            ) : filteredHistory.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                                        No rides found.
+                                    </td>
+                                </tr>
+                            ) : filteredHistory.map(ride => (
+                                <tr key={ride.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="font-medium text-slate-900">{ride.id}</div>
+                                        <div className="text-xs text-slate-500">{ride.date} • {ride.time}</div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                                <User size={14} className="text-slate-400" /> {ride.passenger}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                                <Car size={14} className="text-slate-400" /> {ride.driver}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1 text-xs">
+                                            <span className="flex items-center gap-1.5 text-slate-600">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> {ride.pickup}
+                                            </span>
+                                            <span className="flex items-center gap-1.5 text-slate-600">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {ride.dropoff}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1">
+                                            <StatusBadge status={ride.status} />
+                                            <span className="text-sm font-semibold text-slate-900 ml-1">
+                                                ₹{ride.amount.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        {(ride.status === 'upcoming' || ride.status === 'ongoing') && (
+                                            <button
+                                                onClick={() => handleCancelRide(ride.id)}
+                                                className="text-xs font-medium text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition-colors"
+                                            >
+                                                Cancel Ride
+                                            </button>
+                                        )}
+                                        {ride.status === 'completed' && (
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveDropdown(activeDropdown === ride.id ? null : ride.id);
+                                                    }}
+                                                    className={`p-2 rounded-full transition-colors ${activeDropdown === ride.id ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'}`}
+                                                >
+                                                    <MoreVertical size={16} />
+                                                </button>
+
+                                                {activeDropdown === ride.id && (
+                                                    <>
+                                                        <div
+                                                            className="fixed inset-0 z-10"
+                                                            onClick={() => setActiveDropdown(null)}
+                                                        />
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                            <button
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
+                                                                onClick={() => {
+                                                                    navigate(`/rides/${ride.id}`);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <Eye size={14} /> View Details
+                                                            </button>
+                                                            <button
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
+                                                                onClick={() => {
+                                                                    alert(`Downloading invoice for ${ride.id}`);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <Download size={14} /> Download Invoice
+                                                            </button>
+                                                            <div className="h-px bg-slate-100 my-1"></div>
+                                                            <button
+                                                                className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                                                                onClick={() => {
+                                                                    alert(`Report issue for ${ride.id}`);
+                                                                    setActiveDropdown(null); // Close dropdown
+                                                                }}
+                                                            >
+                                                                <AlertCircle size={14} /> Report Issue
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                {filteredHistory.length === 0 && (
+                    <div className="p-8 text-center text-slate-500">
+                        No rides found matching your filters.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderDisputes = () => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {disputesData.map(dispute => (
+                <div key={dispute.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-orange-50 text-orange-600 rounded-lg">
+                                <ShieldAlert size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-900">Dispute #{dispute.id}</h3>
+                                <p className="text-xs text-slate-500">{dispute.date}</p>
+                            </div>
+                        </div>
+                        <StatusBadge status={dispute.status} />
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-700">
+                        <span className="font-semibold text-slate-900 block mb-1">Issue:</span>
+                        "{dispute.issue}"
+                    </div>
+
+                    <div className="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-3">
+                        <div className="flex justify-between">
+                            <span>Passenger:</span>
+                            <span className="font-medium text-slate-900">{dispute.passenger}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Driver:</span>
+                            <span className="font-medium text-slate-900">{dispute.driver}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Ride ID:</span>
+                            <span className="font-mono text-slate-500">{dispute.rideId}</span>
+                        </div>
+                        <div className="flex justify-between text-rose-600 font-medium">
+                            <span>Disputed Amount:</span>
+                            <span>₹{dispute.amount.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-auto pt-2">
+                        {dispute.status === 'open' ? (
+                            <>
+                                <button
+                                    onClick={() => handleRefund(dispute.id)}
+                                    className="flex-1 bg-slate-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <DollarSign size={16} /> Refund
+                                </button>
+                                <button className="flex-1 bg-white border border-slate-200 text-slate-700 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all">
+                                    Dismiss
+                                </button>
+                            </>
+                        ) : (
+                            <div className="w-full text-center text-sm text-emerald-600 font-medium bg-emerald-50 py-2 rounded-lg border border-emerald-100">
+                                Dispute Resolved
+                            </div>
+                        )}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-bold text-slate-900">
+                    {view === 'live' && 'Live Ride Tracking'}
+                    {view === 'history' && 'Ride History Management'}
+                    {view === 'disputes' && 'Disputes & Refunds'}
+                </h1>
+                <p className="text-slate-500 text-sm">
+                    {view === 'live' && 'Monitor active rides in real-time across the city.'}
+                    {view === 'history' && 'View and manage past, upcoming, and cancelled rides.'}
+                    {view === 'disputes' && 'Resolve passenger disputes and process refunds.'}
+                </p>
+            </div>
+
+            {view === 'live' && renderLiveTracking()}
+            {view === 'history' && renderHistory()}
+            {view === 'disputes' && renderDisputes()}
+        </div>
+    );
+};
+
+export default RideManagement;
