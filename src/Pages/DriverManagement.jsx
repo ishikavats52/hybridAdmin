@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
     Search, Filter, MoreVertical, Ban, CheckCircle, Clock,
     MapPin, DollarSign, FileText, User, ChevronDown, Download,
-    Plus, AlertTriangle, Star, X, Eye, ThumbsUp, ThumbsDown, Upload
+    Plus, AlertTriangle, Star, X, Eye, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import axios from 'axios';
@@ -71,60 +71,6 @@ const DriverManagement = ({ view = 'directory' }) => {
     const [selectedApplicant, setSelectedApplicant] = useState(null);
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [viewingImage, setViewingImage] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = React.useRef(null);
-    const [uploadType, setUploadType] = useState(null);
-
-    const handleUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file || !selectedApplicant) return;
-
-        const formData = new FormData();
-        formData.append('document', file);
-        formData.append('docType', uploadType);
-
-        try {
-            setIsUploading(true);
-            const token = localStorage.getItem('adminToken');
-            const res = await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/api/admin/drivers/${selectedApplicant.id}/upload`,
-                formData,
-                {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-            );
-
-            if (res.data.success) {
-                // Refresh data
-                fetchDrivers();
-                // Update selectedApplicant to show new image immediately
-                const newDocPath = res.data.data.driverDetails.documents[uploadType];
-                setSelectedApplicant(prev => ({
-                    ...prev,
-                    documents: {
-                        ...prev.documents,
-                        [uploadType]: `${import.meta.env.VITE_API_BASE_URL}${newDocPath}`
-                    }
-                }));
-                alert(`${uploadType} uploaded successfully!`);
-            }
-        } catch (error) {
-            console.error("Upload failed", error);
-            alert("Upload failed. Please try again.");
-        } finally {
-            setIsUploading(false);
-            setUploadType(null);
-            if (e.target) e.target.value = ''; // Reset input
-        }
-    };
-
-    const triggerUpload = (type) => {
-        setUploadType(type);
-        if (fileInputRef.current) fileInputRef.current.click();
-    };
 
     // Fetch Drivers
     React.useEffect(() => {
@@ -152,10 +98,20 @@ const DriverManagement = ({ view = 'directory' }) => {
                     address: 'Location Pending',
                     rating: d.ratings?.average || d.driverDetails?.ratings?.average || 5.0,
                     totalEarnings: d.driverDetails?.earnings || 0,
-                    avatar: d.profileImage ? `${import.meta.env.VITE_API_BASE_URL}${d.profileImage}` : `https://ui-avatars.com/api/?name=${d.name}&background=random`,
+                    avatar: d.profileImage ? (() => {
+                        if (d.profileImage.startsWith('http')) return d.profileImage;
+                        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+                        const filePath = d.profileImage.startsWith('/') ? d.profileImage : `/${d.profileImage}`;
+                        return `${baseUrl}${filePath}`;
+                    })() : `https://ui-avatars.com/api/?name=${d.name}&background=random`,
                     driverDetails: d.driverDetails,
                     documents: d.driverDetails?.documents ? Object.fromEntries(
-                        Object.entries(d.driverDetails.documents).map(([k, v]) => [k, `${import.meta.env.VITE_API_BASE_URL}${v}`])
+                        Object.entries(d.driverDetails.documents).map(([k, v]) => {
+                            if (v.startsWith('http')) return [k, v];
+                            const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+                            const filePath = v.startsWith('/') ? v : `/${v}`;
+                            return [k, `${baseUrl}${filePath}`];
+                        })
                     ) : {}
                 }));
 
@@ -652,13 +608,6 @@ const DriverManagement = ({ view = 'directory' }) => {
 
     return (
         <div className="space-y-6">
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                onChange={handleUpload}
-                accept="image/*,.pdf"
-            />
             {selectedDriver ? (
                 <div className="p-6">
                     {renderDriverDetails()}
@@ -782,20 +731,7 @@ const DriverManagement = ({ view = 'directory' }) => {
                         </div>
 
                         <div>
-                            <div className="flex justify-between items-center mb-3">
-                                <h5 className="font-bold text-slate-700 text-sm uppercase tracking-wide">Uploaded Documents</h5>
-                                <div className="flex gap-2">
-                                    {['aadharFront', 'aadharBack', 'licenseFront', 'licenseBack', 'rc', 'insurance'].filter(type => !selectedApplicant.documents[type]).map(type => (
-                                        <button 
-                                            key={type}
-                                            onClick={() => triggerUpload(type)}
-                                            className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-200 hover:bg-blue-100 uppercase"
-                                        >
-                                            + Upload {type.replace(/([A-Z])/g, ' $1')}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            <h5 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Uploaded Documents</h5>
                             {Object.keys(selectedApplicant.documents).length === 0 ? (
                                 <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500 text-sm">
                                     No documents uploaded yet.
@@ -803,25 +739,14 @@ const DriverManagement = ({ view = 'directory' }) => {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {Object.entries(selectedApplicant.documents).map(([key, url]) => (
-                                        <div key={key} className="border border-slate-200 rounded-xl p-3 hover:border-blue-300 transition-colors cursor-pointer group bg-white shadow-sm">
+                                        <div key={key} className="border border-slate-200 rounded-xl p-3 hover:border-blue-300 transition-colors cursor-pointer group bg-white shadow-sm" onClick={() => setViewingImage({ url, title: key.replace(/([A-Z])/g, ' $1').trim() })}>
                                             <div className="mb-2 flex justify-between items-center">
                                                 <span className="text-sm font-medium text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={() => triggerUpload(key)}
-                                                        className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <Upload size={10} /> Replace
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setViewingImage({ url, title: key.replace(/([A-Z])/g, ' $1').trim() })}
-                                                        className="text-[10px] text-slate-600 font-bold hover:underline flex items-center gap-1"
-                                                    >
-                                                        <Eye size={10} /> View
-                                                    </button>
-                                                </div>
+                                                <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity hover:underline flex items-center gap-1">
+                                                    <Eye size={12} /> View Full
+                                                </span>
                                             </div>
-                                            <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-100 relative group-hover:shadow-md transition-shadow" onClick={() => setViewingImage({ url, title: key.replace(/([A-Z])/g, ' $1').trim() })}>
+                                            <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-100 relative group-hover:shadow-md transition-shadow">
                                                 <img src={url} alt={key} className="w-full h-full object-cover" />
                                             </div>
                                         </div>
