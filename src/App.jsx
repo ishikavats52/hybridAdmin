@@ -8,6 +8,7 @@ import RideManagement from "./Pages/RideManagement"
 import RideDetails from "./Pages/RideDetails"
 import PaymentManagement from "./Pages/PaymentManagement"
 import PoolManagement from "./Pages/PoolManagement"
+import PoolDetails from "./Pages/PoolDetails"
 
 // Auth Guard Component
 const RequireAuth = ({ children }) => {
@@ -47,8 +48,9 @@ function App() {
                 {/* Ride Management */}
                 <Route path='/rides/live' element={<RideManagement view="live" />} />
                 <Route path='/rides/pools' element={<PoolManagement />} />
+                <Route path='/rides/pools/:poolId' element={<PoolDetails />} />
                 <Route path='/rides/history' element={<RideManagement view="history" />} />
-                <Route path='/rides/disputes' element={<RideManagement view="disputes" />} />
+                {/* <Route path='/rides/disputes' element={<RideManagement view="disputes" />} /> */}
                 <Route path='/rides/:rideId' element={<RideDetails />} />
 
                 {/* Payments & Earnings */}

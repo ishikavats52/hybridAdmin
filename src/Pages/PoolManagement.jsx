@@ -4,9 +4,11 @@ import {
     CheckCircle, XCircle, AlertCircle, Eye, MoreVertical,
     Calendar, Car, DollarSign, ChevronDown
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const PoolManagement = () => {
+    const navigate = useNavigate();
     const [pools, setPools] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -41,10 +43,12 @@ const PoolManagement = () => {
     }, [fetchPools]);
 
     const filteredPools = pools.filter(pool => {
+        const query = searchQuery.toLowerCase();
         const matchesSearch =
-            pool.origin?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pool.destination?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pool.host?.name.toLowerCase().includes(searchQuery.toLowerCase());
+            (pool.origin?.name?.toLowerCase().includes(query)) ||
+            (pool.destination?.name?.toLowerCase().includes(query)) ||
+            (pool.host?.name?.toLowerCase().includes(query)) ||
+            (pool.vehicle?.toLowerCase().includes(query));
         return matchesSearch;
     });
 
@@ -180,7 +184,10 @@ const PoolManagement = () => {
                                         <StatusBadge status={pool.status} />
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                                        <button
+                                            onClick={() => navigate(`/rides/pools/${pool._id}`)}
+                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                        >
                                             <Eye size={18} />
                                         </button>
                                     </td>

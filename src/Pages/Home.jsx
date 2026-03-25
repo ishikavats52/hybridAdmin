@@ -75,7 +75,7 @@ function Home() {
     dailyRevenue: 0,
     totalRevenue: 0
   });
-    // const [loading, setLoading] = useState(true); // Removed as unused
+  // const [loading, setLoading] = useState(true); // Removed as unused
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -105,9 +105,9 @@ function Home() {
           <p className="text-slate-600 text-sm">Real-time platform overview</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
+          {/* <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
             Download Report
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -211,8 +211,8 @@ function Home() {
       </div>
 
       {/* User Growth & Recent Rides */}
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-       
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <h3 className="text-lg font-bold text-slate-900 mb-4">User Registration Growth</h3>
           <div className="h-72 w-full">

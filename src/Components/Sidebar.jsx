@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard, Users, GraduationCap, School, Banknote,
+    LayoutDashboard, Users, GraduationCap, Bike, School, Banknote,
     CalendarCheck, Settings, LogOut, ChevronDown, ChevronRight,
     UserCog, Building2, UsersRound, FileText, CreditCard, Key, ClipboardList,
     ShieldCheck, Bell, Activity, UserPlus, Shield, Mail, Calendar, MapPin, List, Car, AlertCircle, User,
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 { title: 'Live Rides', path: '/rides/live', icon: Activity },
                 { title: 'Pool Management', path: '/rides/pools', icon: List },
                 { title: 'Ride History', path: '/rides/history', icon: CalendarCheck },
-                { title: 'Disputes', path: '/rides/disputes', icon: AlertCircle },
+                // { title: 'Disputes', path: '/rides/disputes', icon: AlertCircle },
             ]
         },
         {
@@ -79,7 +79,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             type: 'group',
             subMenus: [
                 { title: 'Driver Payouts', path: '/payments/payouts', icon: CreditCard },
-                { title: 'Transactions', path: '/payments/transactions', icon: FileText },
+                // { title: 'Transactions', path: '/payments/transactions', icon: FileText },
             ]
         },
     ];
@@ -100,11 +100,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               ${level > 0 ? 'ml-0' : ''}
               ${active
                                 ? 'neu-pressed text-blue-600 font-semibold'
-                                : 'text-slate-500 hover:text-blue-600'
+                                : 'text-navy-dark hover:text-blue-600'
                             } `}
                     >
-                        <item.icon size={level === 0 ? 20 : 16} />
-                        <span className="font-medium">{item.title}</span>
+                        <item.icon size={level === 0 ? 20 : 16} className={active ? 'text-blue-600' : 'text-navy-dark'} />
+                        <span className="font-medium text-navy-dark">{item.title}</span>
                         {active && <motion.div layoutId="active-dot" className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600" />}
                     </Link>
                 </li>
@@ -125,18 +125,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     }}
                     className={`w-full flex items-center justify-between rounded-xl transition-all duration-300
             ${level === 0 ? 'px-4 py-3' : 'px-4 py-2 text-sm'}
-            ${(hasActiveChild || isExpanded) && level === 0 ? 'neu-pressed text-blue-600' : 'text-slate-500 hover:text-blue-600'}
+            ${(hasActiveChild || isExpanded) && level === 0 ? 'neu-pressed text-blue-600' : 'text-navy-dark hover:text-blue-600'}
             ${level > 0 && isExpanded ? 'text-blue-600' : ''}
 `}
                 >
                     <div className="flex items-center gap-3">
-                        <GroupIcon size={level === 0 ? 20 : 16} />
-                        <span className="font-medium">{item.title}</span>
+                        <GroupIcon size={level === 0 ? 20 : 16} className={(hasActiveChild || isExpanded) && level === 0 ? 'text-blue-600' : 'text-navy-dark'} />
+                        <span className="font-medium text-navy-dark">{item.title}</span>
                     </div>
                     {isExpanded ? (
-                        <ChevronDown size={14} className="opacity-70" />
+                        <ChevronDown size={14} className="text-navy-dark opacity-50" />
                     ) : (
-                        <ChevronRight size={14} className="opacity-70" />
+                        <ChevronRight size={14} className="text-navy-dark opacity-50" />
                     )}
                 </button>
 
@@ -170,14 +170,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div className="p-6 border-b border-white/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                        <GraduationCap size={24} strokeWidth={3} />
+                        <Bike size={24} strokeWidth={3} />
                     </div>
                     <div >
-                        <h1 className="text-xl font-bold text-slate-800 leading-none">EduAdmin</h1>
-                        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Management</p>
+                        <h1 className="text-xl font-bold text-navy-dark leading-none">Sanchari</h1>
+                        {/* <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Management</p> */}
                     </div>
                 </div>
-                <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-slate-600">
+                <button onClick={toggleSidebar} className="lg:hidden text-navy-dark/40 hover:text-navy-dark">
                     <ChevronRight className="rotate-180" size={24} />
                 </button>
             </div>
@@ -198,10 +198,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         {adminUser?.name?.charAt(0)?.toUpperCase() || 'A'}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-slate-800 truncate">{adminUser?.name || 'Admin User'}</h4>
-                        <p className="text-xs text-slate-500 truncate">{adminUser?.email || 'admin@hybridride.com'}</p>
+                        <h4 className="text-sm font-bold text-navy-dark truncate">{adminUser?.name || 'Admin User'}</h4>
+                        <p className="text-xs text-navy-dark truncate">{adminUser?.email || 'admin@hybridride.com'}</p>
                     </div>
-                    <LogOut size={18} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+                    <LogOut size={18} className="text-navy-dark/40 group-hover:text-red-500 transition-colors" />
                 </div>
             </div>
         </motion.div>

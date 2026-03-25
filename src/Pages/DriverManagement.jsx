@@ -91,7 +91,8 @@ const DriverManagement = ({ view = 'directory' }) => {
                     name: d.name,
                     phone: d.phone,
                     email: d.email,
-                    status: d.verificationStatus?.communityTrusted ? 'active' : 'pending', // Simplified status logic
+                    status: d.driverApprovalStatus === 'approved' ? 'active' : (d.driverApprovalStatus === 'rejected' ? 'rejected' : 'pending'),
+                    rejectionReason: d.rejectionReason,
                     vehicle: d.driverDetails?.vehicle?.model || 'Pending',
                     vehicleType: d.driverDetails?.vehicle?.type || 'CAR',
                     joinDate: new Date(d.createdAt).toLocaleDateString(),
@@ -116,7 +117,7 @@ const DriverManagement = ({ view = 'directory' }) => {
                 }));
 
                 setDrivers(allDrivers.filter(d => d.status === 'active' || d.status === 'blocked'));
-                setOnboardingList(allDrivers.filter(d => d.status === 'pending'));
+                setOnboardingList(allDrivers.filter(d => d.status === 'pending' || d.status === 'rejected'));
             }
         } catch (error) {
             console.error("Failed to fetch drivers", error);
@@ -159,11 +160,15 @@ const DriverManagement = ({ view = 'directory' }) => {
     };
 
     const handleReject = async (id) => {
+        const reason = prompt("Enter a reason for rejection:", "Missing or unclear documents.");
+        if (reason === null) return; // Cancelled
+
         try {
             const token = localStorage.getItem('adminToken');
-            const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/admin/drivers/${id}/verify`, { action: 'reject' }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/admin/drivers/${id}/verify`, 
+                { action: 'reject', rejectionReason: reason }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
             if (res.data.success) {
                 // Refresh list
@@ -404,12 +409,12 @@ const DriverManagement = ({ view = 'directory' }) => {
                         <option value="active">Active</option>
                         <option value="blocked">Blocked</option>
                     </select>
-                    <button
+                    {/* <button
                         onClick={() => setIsAddDriverModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
                     >
                         <Plus size={16} /> Add Driver
-                    </button>
+                    </button> */}
 
                 </div>
             </div>
@@ -523,11 +528,16 @@ const DriverManagement = ({ view = 'directory' }) => {
                                 <p className="text-sm text-slate-500">{applicant.phone}</p>
                             </div>
                         </div>
-                        <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-lg border border-amber-200 font-medium">Pending</span>
+                        <span className={`text-xs px-2 py-1 rounded-lg border font-medium ${applicant.status === 'rejected' ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                            {applicant.status === 'rejected' ? 'Rejected' : 'Pending'}
+                        </span>
                     </div>
                     <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <p>Applied: <span className="font-medium">{applicant.appliedDate}</span></p>
+                        <p>Applied: <span className="font-medium">{applicant.appliedDate || applicant.joinDate}</span></p>
                         <p>Email: {applicant.email}</p>
+                        {applicant.status === 'rejected' && (
+                            <p className="mt-2 text-rose-600 italic">Reason: {applicant.rejectionReason}</p>
+                        )}
                     </div>
                     <button
                         onClick={() => { setSelectedApplicant(applicant); setIsDocModalOpen(true); }}

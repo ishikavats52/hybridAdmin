@@ -339,7 +339,7 @@ const RideManagement = ({ view = 'live' }) => {
                                                             >
                                                                 <Eye size={14} /> View Details
                                                             </button>
-                                                            <button
+                                                            {/* <button
                                                                 className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
                                                                 onClick={() => {
                                                                     alert(`Downloading invoice for ${ride.id}`);
@@ -347,9 +347,9 @@ const RideManagement = ({ view = 'live' }) => {
                                                                 }}
                                                             >
                                                                 <Download size={14} /> Download Invoice
-                                                            </button>
+                                                            </button> */}
                                                             <div className="h-px bg-slate-100 my-1"></div>
-                                                            <button
+                                                            {/* <button
                                                                 className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2"
                                                                 onClick={() => {
                                                                     alert(`Report issue for ${ride.id}`);
@@ -357,7 +357,7 @@ const RideManagement = ({ view = 'live' }) => {
                                                                 }}
                                                             >
                                                                 <AlertCircle size={14} /> Report Issue
-                                                            </button>
+                                                            </button> */}
                                                         </div>
                                                     </>
                                                 )}
@@ -449,18 +449,18 @@ const RideManagement = ({ view = 'live' }) => {
                 <h1 className="text-2xl font-bold text-slate-900">
                     {view === 'live' && 'Live Ride Tracking'}
                     {view === 'history' && 'Ride History Management'}
-                    {view === 'disputes' && 'Disputes & Refunds'}
+                    {/* {view === 'disputes' && 'Disputes & Refunds'} */}
                 </h1>
                 <p className="text-slate-500 text-sm">
                     {view === 'live' && 'Monitor active rides in real-time across the city.'}
                     {view === 'history' && 'View and manage past, upcoming, and cancelled rides.'}
-                    {view === 'disputes' && 'Resolve passenger disputes and process refunds.'}
+                    {/* {view === 'disputes' && 'Resolve passenger disputes and process refunds.'} */}
                 </p>
             </div>
 
             {view === 'live' && renderLiveTracking()}
             {view === 'history' && renderHistory()}
-            {view === 'disputes' && renderDisputes()}
+            {/* {view === 'disputes' && renderDisputes()} */}
         </div>
     );
 };

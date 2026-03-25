@@ -300,7 +300,7 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                 </div>
 
                 {/* Withdrawal Requests - C */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                {/* <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 bg-slate-50">
                         <h3 className="font-bold text-slate-900">Withdrawal Requests</h3>
                     </div>
@@ -346,7 +346,7 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );
