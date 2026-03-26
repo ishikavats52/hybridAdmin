@@ -95,6 +95,7 @@ const DriverManagement = ({ view = 'directory' }) => {
                     rejectionReason: d.rejectionReason,
                     vehicle: d.driverDetails?.vehicle?.model || 'Pending',
                     vehicleType: d.driverDetails?.vehicle?.type || 'CAR',
+                    plateNumber: d.driverDetails?.vehicle?.plateNumber || 'N/A',
                     joinDate: new Date(d.createdAt).toLocaleDateString(),
                     address: 'Location Pending',
                     rating: d.ratings?.average || d.driverDetails?.ratings?.average || 5.0,
@@ -268,7 +269,10 @@ const DriverManagement = ({ view = 'directory' }) => {
                                     <div className="p-2 bg-slate-50 rounded-lg text-slate-500"><div className="w-4 h-4 rounded-full border-2 border-slate-400"></div></div>
                                     <div>
                                         <p className="text-xs text-slate-500">Vehicle</p>
-                                        <p className="text-sm font-medium text-slate-900">{d.vehicle}</p>
+                                        <p className="text-sm font-medium text-slate-900">{d.vehicle} ({d.vehicleType})</p>
+                                        <p className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 mt-1 inline-block">
+                                            {d.plateNumber}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -453,7 +457,13 @@ const DriverManagement = ({ view = 'directory' }) => {
                                     <div className="text-sm text-slate-600">{driver.phone}</div>
                                     <div className="text-xs text-slate-400">{driver.email}</div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{driver.vehicle}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm font-medium text-slate-900">{driver.vehicle}</div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200 uppercase">{driver.vehicleType}</span>
+                                        <span className="text-[10px] font-bold bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 border border-blue-100">{driver.plateNumber}</span>
+                                    </div>
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center w-fit gap-1 capitalize
                                         ${driver.status === 'active'

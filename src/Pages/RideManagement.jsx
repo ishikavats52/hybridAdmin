@@ -210,7 +210,7 @@ const RideManagement = ({ view = 'live' }) => {
             {/* Filters */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 no-scrollbar">
-                    {['all', 'upcoming', 'ongoing', 'completed', 'cancelled'].map(tab => (
+                    {['all', 'completed', 'cancelled'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -449,18 +449,18 @@ const RideManagement = ({ view = 'live' }) => {
                 <h1 className="text-2xl font-bold text-slate-900">
                     {view === 'live' && 'Live Ride Tracking'}
                     {view === 'history' && 'Ride History Management'}
-                    {/* {view === 'disputes' && 'Disputes & Refunds'} */}
+                    {view === 'disputes' && 'Disputes & Refunds'}
                 </h1>
                 <p className="text-slate-500 text-sm">
                     {view === 'live' && 'Monitor active rides in real-time across the city.'}
                     {view === 'history' && 'View and manage past, upcoming, and cancelled rides.'}
-                    {/* {view === 'disputes' && 'Resolve passenger disputes and process refunds.'} */}
+                    {view === 'disputes' && 'Resolve passenger disputes and process refunds.'}
                 </p>
             </div>
 
             {view === 'live' && renderLiveTracking()}
             {view === 'history' && renderHistory()}
-            {/* {view === 'disputes' && renderDisputes()} */}
+            {view === 'disputes' && renderDisputes()}
         </div>
     );
 };

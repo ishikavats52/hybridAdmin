@@ -50,7 +50,7 @@ function App() {
                 <Route path='/rides/pools' element={<PoolManagement />} />
                 <Route path='/rides/pools/:poolId' element={<PoolDetails />} />
                 <Route path='/rides/history' element={<RideManagement view="history" />} />
-                {/* <Route path='/rides/disputes' element={<RideManagement view="disputes" />} /> */}
+                <Route path='/rides/disputes' element={<RideManagement view="disputes" />} />
                 <Route path='/rides/:rideId' element={<RideDetails />} />
 
                 {/* Payments & Earnings */}
