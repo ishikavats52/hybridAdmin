@@ -70,6 +70,7 @@ const DriverManagement = ({ view = 'directory' }) => {
     const [isDocModalOpen, setIsDocModalOpen] = useState(false);
     const [selectedApplicant, setSelectedApplicant] = useState(null);
     const [selectedDriver, setSelectedDriver] = useState(null);
+    const [driverRides, setDriverRides] = useState([]);
     const [viewingImage, setViewingImage] = useState(null);
 
     // Fetch Drivers
@@ -126,6 +127,29 @@ const DriverManagement = ({ view = 'directory' }) => {
             // setIsLoading(false);
         }
     };
+
+    const fetchDriverRides = async (driverId) => {
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/drivers/${driverId}/rides`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.success) {
+                setDriverRides(res.data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch driver rides", error);
+            setDriverRides([]);
+        }
+    };
+
+    React.useEffect(() => {
+        if (selectedDriver) {
+            fetchDriverRides(selectedDriver.id);
+        } else {
+            setDriverRides([]);
+        }
+    }, [selectedDriver]);
 
     // Filter Logic
     const filteredDrivers = drivers.filter(d => {
@@ -213,7 +237,6 @@ const DriverManagement = ({ view = 'directory' }) => {
 
     const renderDriverDetails = () => {
         const d = selectedDriver;
-        const driverRides = mockRides.filter(r => r.driver === d.name);
         const completedRides = driverRides.filter(r => r.status === 'completed');
         const cancelledRides = driverRides.filter(r => r.status === 'cancelled');
 
