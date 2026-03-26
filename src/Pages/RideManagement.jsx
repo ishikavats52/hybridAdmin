@@ -252,7 +252,7 @@ const RideManagement = ({ view = 'live' }) => {
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Participants</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Route</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Status & Amount</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+                                {/* <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th> */}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">

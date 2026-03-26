@@ -6,7 +6,7 @@ import {
     CalendarCheck, Settings, LogOut, ChevronDown, ChevronRight,
     UserCog, Building2, UsersRound, FileText, CreditCard, Key, ClipboardList,
     ShieldCheck, Bell, Activity, UserPlus, Shield, Mail, Calendar, MapPin, List, Car, AlertCircle, User,
-    X, Search, Filter, MoreVertical
+    X, Search, Filter, MoreVertical, Wallet
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -78,8 +78,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             icon: Banknote,
             type: 'group',
             subMenus: [
-                { title: 'Driver Payouts', path: '/payments/payouts', icon: CreditCard },
-                // { title: 'Transactions', path: '/payments/transactions', icon: FileText },
+                { title: 'Driver Wallets', path: '/payments/wallets/drivers', icon: Wallet },
+                { title: 'Passenger Wallets', path: '/payments/wallets/passengers', icon: Wallet },
+                { title: 'Transactions', path: '/payments/transactions', icon: FileText },
             ]
         },
     ];

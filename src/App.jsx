@@ -55,7 +55,8 @@ function App() {
 
                 {/* Payments & Earnings */}
                 <Route path='/payments' element={<PaymentManagement view="dashboard" />} />
-                <Route path='/payments/payouts' element={<PaymentManagement view="payouts" />} />
+                <Route path='/payments/wallets/drivers' element={<PaymentManagement view="driver-wallets" />} />
+                <Route path='/payments/wallets/passengers' element={<PaymentManagement view="passenger-wallets" />} />
                 <Route path='/payments/commissions' element={<PaymentManagement view="commissions" />} />
                 <Route path='/payments/transactions' element={<PaymentManagement view="transactions" />} />
               </Routes>
