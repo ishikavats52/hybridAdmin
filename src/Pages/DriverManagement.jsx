@@ -94,7 +94,9 @@ const DriverManagement = ({ view = 'directory' }) => {
                     email: d.email,
                     status: d.driverApprovalStatus === 'approved' ? 'active' : (d.driverApprovalStatus === 'rejected' ? 'rejected' : 'pending'),
                     rejectionReason: d.rejectionReason,
-                    vehicle: d.driverDetails?.vehicle?.model || 'Pending',
+                    vehicleMake: d.driverDetails?.vehicle?.make || '',
+                    vehicleModel: d.driverDetails?.vehicle?.model || 'Pending',
+                    vehicle: `${d.driverDetails?.vehicle?.make || ''} ${d.driverDetails?.vehicle?.model || ''}`.trim() || 'Pending',
                     vehicleType: d.driverDetails?.vehicle?.type || 'CAR',
                     plateNumber: d.driverDetails?.vehicle?.plateNumber || 'N/A',
                     joinDate: new Date(d.createdAt).toLocaleDateString(),
@@ -292,7 +294,10 @@ const DriverManagement = ({ view = 'directory' }) => {
                                     <div className="p-2 bg-slate-50 rounded-lg text-slate-500"><div className="w-4 h-4 rounded-full border-2 border-slate-400"></div></div>
                                     <div>
                                         <p className="text-xs text-slate-500">Vehicle</p>
-                                        <p className="text-sm font-medium text-slate-900">{d.vehicle} ({d.vehicleType})</p>
+                                        <p className="text-sm font-medium text-slate-900">
+                                            {d.vehicleMake && <span className="mr-1">{d.vehicleMake}</span>}
+                                            {d.vehicleModel} ({d.vehicleType})
+                                        </p>
                                         <p className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 mt-1 inline-block">
                                             {d.plateNumber}
                                         </p>
@@ -658,7 +663,7 @@ const DriverManagement = ({ view = 'directory' }) => {
             ) : (
                 <>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <h1 className="text-2xl font-bold text-slate-900">Driver Management</h1>
+                        <h1 className="text-2xl font-bold text-white">Driver Management</h1>
                     </div>
 
                     {/* Navigation Tabs */}

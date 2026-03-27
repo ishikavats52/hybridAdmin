@@ -101,8 +101,8 @@ function Home() {
       {/* Review & Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-600 text-sm">Real-time platform overview</p>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-white text-sm">Real-time platform overview</p>
         </div>
         <div className="flex gap-3">
           {/* <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
@@ -142,30 +142,23 @@ function Home() {
       </div>
 
       {/* Stats Row 2: Revenue */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
-          title="Daily Revenue"
-          value={`₹${stats.dailyRevenue.toLocaleString()}`}
-          icon={<DollarSign size={24} />}
-          color="bg-emerald-600"
-          trend="+8%"
-          footer="vs yesterday"
-        />
-        <StatCard
-          title="Total Revenue (Platform)"
+          title="Total Collection (Gross)"
           value={`₹${stats.totalRevenue.toLocaleString()}`}
           icon={<DollarSign size={24} />}
-          color="bg-emerald-600"
+          color="bg-slate-800"
           trend="+12%"
-          footer="Overall"
+          footer="Full passenger payments"
         />
         <StatCard
-          title="Projected Monthly"
-          value={`₹${(stats.dailyRevenue * 30).toLocaleString()}`}
-          icon={<DollarSign size={24} />}
+          title="Total Payouts (After 2% Cut)"
+          value={`₹${(stats.totalPayouts || 0).toLocaleString()}`}
+          subtitle={`Commission: ₹${(stats.totalCommission || 0).toLocaleString()}`}
+          icon={<CheckCircle size={24} />}
           color="bg-emerald-600"
-          trend="+15%"
-          footer="Estimated"
+          trend="+12%"
+          footer="Driver share (98%)"
         />
       </div>
 

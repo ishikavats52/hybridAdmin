@@ -59,6 +59,7 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
         netProfit: 0
     });
     const [transactions, setTransactions] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,7 +71,7 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/financial-overview`, { headers }),
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/driver-wallets`, { headers }),
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/passenger-wallets`, { headers }),
-                    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/wallet/admin/withdrawals`, { headers }),
+                    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/withdrawals`, { headers }),
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/transactions`, { headers })
                 ]);
 
@@ -91,10 +92,19 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
     const handleWithdrawalAction = async (id, newStatus) => {
         if (window.confirm(`Are you sure you want to ${newStatus} this request?`)) {
             try {
-                // Mock update for now
-                setWithdrawals(withdrawals.map(w => w._id === id ? { ...w, status: newStatus } : w));
+                const token = localStorage.getItem('adminToken');
+                const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/admin/withdrawals/${id}`, 
+                    { status: newStatus === 'approved' ? 'approved' : 'rejected' },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+
+                if (res.data.success) {
+                    setWithdrawals(withdrawals.map(w => w._id === id ? { ...w, status: res.data.data.status } : w));
+                    alert(`Request ${newStatus} successfully`);
+                }
             } catch (err) {
                 console.error(err);
+                alert(err.response?.data?.message || 'Failed to update request');
             }
         }
     };
@@ -204,8 +214,10 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                             <tr className="text-white/20">
                                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">REQ ID</th>
                                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Provider</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Net Payout</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Validation</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Current Balance</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Payable Amount</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Bank Details</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Status</th>
                                 <th className="px-6 py-4 text-xs text-right uppercase tracking-[0.2em]">Operation</th>
                             </tr>
                         </thead>
@@ -214,8 +226,22 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                                 <tr key={req._id} className="glass-card">
                                     <td className="px-6 py-5 first:rounded-l-3xl font-mono text-[10px] font-black text-white/20">#{req._id.slice(-8).toUpperCase()}</td>
                                     <td className="px-6 py-5 text-sm font-black text-white">{req.driver?.name}</td>
-                                    <td className="px-6 py-5 font-black text-emerald-400 italic">₹{req.netAmount}</td>
-                                    <td className="px-6 py-5"><StatusBadge status={req.status} /></td>
+                                    <td className="px-6 py-5">
+                                        <span className="text-sm font-black text-white/60">₹{parseFloat(req.driver?.walletBalance || 0).toLocaleString()}</span>
+                                    </td>
+                                    <td className="px-6 py-5 font-black text-emerald-400 italic">₹{req.amount}</td>
+                                    <td className="px-6 py-5">
+                                        <div className="text-[10px] font-bold text-white/60">
+                                            {req.bankDetails?.bankName || 'N/A'}<br/>
+                                            A/C: {req.bankDetails?.accountNumber || 'N/A'}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <StatusBadge status={req.status} />
+                                        {req.processedAt && (
+                                            <div className="text-[9px] font-bold text-white/20 mt-1 uppercase">Settled: {new Date(req.processedAt).toLocaleDateString()}</div>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-5 last:rounded-r-3xl text-right">
                                         {req.status === 'pending' && (
                                             <div className="flex justify-end gap-3">
@@ -302,11 +328,14 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
             <div className="flex justify-between items-center gap-6">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={20} />
-                    <input type="text" placeholder="Search Master Ledger..." className="w-full pl-16 pr-8 py-5 rounded-[24px] bg-white/5 border border-white/5 text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-white/10" />
+                    <input 
+                        type="text" 
+                        placeholder="Search Ledger (Description, Name, Role)..." 
+                        className="w-full pl-16 pr-8 py-5 rounded-[24px] bg-white/5 border border-white/5 text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-white/10" 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                <button className="h-16 px-8 glass-card border-white/10 rounded-[24px] text-white/60 font-black text-xs uppercase tracking-widest flex items-center gap-3">
-                    <Filter size={18} /> Filters
-                </button>
             </div>
 
             <div className="glass-panel rounded-[40px] overflow-hidden border-white/5 shadow-2xl">
@@ -325,7 +354,13 @@ const PaymentManagement = ({ view = 'dashboard' }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {transactions.map((tx, idx) => (
+                            {transactions
+                                .filter(tx => 
+                                    tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    tx.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    tx.userRole?.toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .map((tx, idx) => (
                                 <tr key={tx._id || idx} className="glass-card hover:border-emerald-500/30">
                                     <td className="px-6 py-5 first:rounded-l-3xl">
                                         <div className="text-sm font-black text-white">{tx.description || 'Wallet Logic'}</div>

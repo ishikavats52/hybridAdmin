@@ -446,7 +446,7 @@ const RideManagement = ({ view = 'live' }) => {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="text-2xl font-bold text-white">
                     {view === 'live' && 'Live Ride Tracking'}
                     {view === 'history' && 'Ride History Management'}
                     {view === 'disputes' && 'Disputes & Refunds'}

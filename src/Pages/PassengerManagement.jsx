@@ -538,7 +538,7 @@ const PassengerManagement = ({ view = 'directory' }) => {
             ) : (
                 <>
                     <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold text-slate-900">
+                        <h1 className="text-2xl font-bold text-white">
                             {view === 'directory' && 'Passenger Directory'}
                             {view === 'ride_history' && 'Passenger Ride History'}
                             {view === 'transactions' && 'Payment & Refund History'}
